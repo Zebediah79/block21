@@ -1,15 +1,36 @@
-body {
+* {
   margin: 0;
-  padding: 0 1rem;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 h1 {
   text-align: center;
+  padding: 1rem;
 }
 
 main {
-  display: grid;
+  display: flex;
   gap: 1rem;
+  align-items: flex-start;
+}
+
+section {
+  padding: 0 1rem;
+}
+
+div {
+  display: inline;
+}
+form {
+  display: block;
+}
+
+button {
+  width: fit-content;
+  background-color: #eee;
+  padding: 0.2em;
+  border-radius: 0.5em;
 }
 
 @media (width >= 600px) {
@@ -18,38 +39,52 @@ main {
   }
 }
 
-.parties {
+.event {
   display: grid;
   gap: 1ch;
-  padding-left: 0;
-  list-style-type: none;
 }
 
-.parties a {
-  display: block;
+.upcoming,
+.details {
+  flex: 1;
+  padding: 1rem;
   border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.upcoming ul {
+  list-style: none;
+  padding: 0;
+}
+
+.upcoming li a {
+  width: 100%;
+  border: 1px solid #eee;
   border-radius: 0.25rem;
   padding: 1ch;
   text-decoration: none;
-  color: black;
+  color: #0077cc;
+  display: block;
+  padding: 0.5rem 0;
 }
 
-.parties a:hover {
+.upcoming a:hover {
   background: #eee;
   font-style: italic;
+  font-size: 1.2em;
 }
 
-.parties li.selected {
+.upcoming li.selected {
   font-weight: bold;
-  font-style: italic;
 }
 
-form {
+.eventForm {
   display: grid;
   gap: 1ch;
   padding: 0 1rem;
 }
 
-label {
+.eventForm label {
   display: grid;
 }
