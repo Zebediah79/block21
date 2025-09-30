@@ -1,130 +1,200 @@
 // === Constants ===
 const BASE = "https://fsa-crud-2aa9294fe819.herokuapp.com/api";
-const COHORT = ""; // Make sure to change this!
+const COHORT = "/2508-FTB-ET-WEB-FT";
 const API = BASE + COHORT;
 
 // === State ===
-let parties = [];
-let selectedParty;
-let rsvps = [];
+let events = [];
+let selectedEvent;
 let guests = [];
+let rsvps = [];
 
-/** Updates state with all parties from the API */
-async function getParties() {
+// State function to update state by fetching an array of events
+// from the API.
+async function getEvents() {
   try {
-    const response = await fetch(API + "/events");
-    const result = await response.json();
-    parties = result.data;
+    const res = await fetch(API + "/Events");
+    const json = await res.json();
+    events = json.data;
     render();
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.log(err);
   }
 }
 
-/** Updates state with a single party from the API */
-async function getParty(id) {
+// State function to update state by fetching a single event
+// from the API.
+async function getEvent(id) {
   try {
-    const response = await fetch(API + "/events/" + id);
-    const result = await response.json();
-    selectedParty = result.data;
+    const res = await fetch(`${API}/Events/` + id);
+    const json = await res.json();
+    selectedEvent = json.data;
     render();
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.log(err);
   }
 }
-
-/** Updates state with all RSVPs from the API */
-async function getRsvps() {
-  try {
-    const response = await fetch(API + "/rsvps");
-    const result = await response.json();
-    rsvps = result.data;
-    render();
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-/** Updates state with all guests from the API */
+// State function to update state by fetching an array of guests
+// from the API
 async function getGuests() {
   try {
-    const response = await fetch(API + "/guests");
-    const result = await response.json();
-    guests = result.data;
+    const res = await fetch(API + "/guests");
+    const json = await res.json();
+    guests = json.data;
     render();
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.log(err);
+  }
+}
+// State function to update state by fetching an array of RSVPs
+// from the API
+async function getRSVPs() {
+  try {
+    const res = await fetch(API + "/rsvps");
+    const json = await res.json();
+    rsvps = json.data;
+    render();
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function addEvent(event) {
+  try {
+    await fetch(API + "/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(event),
+    });
+    await getEvents();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function removeEvent(id) {
+  try {
+    const res = fetch(API + "/events" + id, {
+      method: "DELETE",
+    });
+    if (res.status === 204) {
+      selectedEvent = null;
+      getEvents();
+    }
+  } catch (err) {
+    console.error(err);
   }
 }
 
 // === Components ===
 
-/** Party name that shows more details about the party when clicked */
-function PartyListItem(party) {
+// function with event listener when party name is clicked on
+// the application updates state by fetching information about a
+// single part from the API.
+function EventListItem(event) {
   const $li = document.createElement("li");
 
-  if (party.id === selectedParty?.id) {
+  if (event.id === selectedEvent?.id) {
     $li.classList.add("selected");
   }
 
-  $li.innerHTML = `
-    <a href="#selected">${party.name}</a>
-  `;
-  $li.addEventListener("click", () => getParty(party.id));
+  $li.innerHTML = `<a href = "#selected">${event.name}</a>`;
+  $li.addEventListener("click", async function () {
+    await getEvent(event.id);
+  });
   return $li;
 }
 
-/** A list of names of all parties */
-function PartyList() {
+// Function to render list of party names
+function EventList() {
   const $ul = document.createElement("ul");
-  $ul.classList.add("parties");
-
-  const $parties = parties.map(PartyListItem);
-  $ul.replaceChildren(...$parties);
-
+  const $events = events.map(EventListItem);
+  $ul.replaceChildren(...$events);
   return $ul;
 }
 
-/** Detailed information about the selected party */
-function SelectedParty() {
-  if (!selectedParty) {
+// Function that creates a form for users to input name, description,
+// date, and location of a new event
+function NewEventForm() {
+  const $form = document.createElement("form");
+  $form.classList.add("eventForm");
+  $form.innerHTML = `
+  <label>
+  Name
+  <input name = "name" required />
+  </label>
+  <label>
+  Description
+  <input name = "description" required/>
+  </label>
+  <label>
+  Date
+  <input name = "date" type = "date" required />
+  </label>
+  <label>
+  Location
+  <input name = "location" required/>
+  </label>
+  <button>Create Event</button>
+  `;
+
+  $form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const data = new FormData($form);
+    const date = new Date(data.get("date")).toISOString();
+    addEvent({
+      name: data.get("name"),
+      description: data.get("description"),
+      date,
+      location: data.get("location"),
+    });
+  });
+  return $form;
+}
+
+// Function to render name, ID, date, description, and location
+// of selectied party.
+function EventDetails() {
+  if (!selectedEvent) {
     const $p = document.createElement("p");
-    $p.textContent = "Please select a party to learn more.";
+    $p.textContent = "Please select a party to know more.";
     return $p;
   }
 
-  const $party = document.createElement("section");
-  $party.innerHTML = `
-    <h3>${selectedParty.name} #${selectedParty.id}</h3>
-    <time datetime="${selectedParty.date}">
-      ${selectedParty.date.slice(0, 10)}
-    </time>
-    <address>${selectedParty.location}</address>
-    <p>${selectedParty.description}</p>
-    <GuestList></GuestList>
-  `;
-  $party.querySelector("GuestList").replaceWith(GuestList());
+  const $section = document.createElement("section");
+  $section.classList.add("event");
+  $section.innerHTML = `
+    <h3>${selectedEvent.name} #${selectedEvent.id}</h3>
+        <time datetime = "${selectedEvent.date}">
+        ${selectedEvent.date.slice(0, 10)}
+        </time>
+        <address>${selectedEvent.location}</address>
+        <p>${selectedEvent.description}</p>
+        <GuestList></GuestList>
+        <button>Remove Event</button>`;
 
-  return $party;
+  const removeButton = $section.querySelector("button");
+  removeButton.addEventListener("click", function () {
+    removeEvent(selectedEvent.id);
+  });
+  $section.querySelector("GuestList").replaceWith(GuestList());
+  console.log(GuestList());
+  return $section;
 }
-
-/** List of guests attending the selected party */
+// Function that filters the guests with who RSVP'd to which event.
 function GuestList() {
   const $ul = document.createElement("ul");
-  const guestsAtParty = guests.filter((guest) =>
+  const eventGuestRsvp = guests.filter((guest) =>
     rsvps.find(
-      (rsvp) => rsvp.guestId === guest.id && rsvp.eventId === selectedParty.id
+      (rsvp) => rsvp.guestId === guest.id && rsvp.eventId === selectedEvent.id
     )
   );
-
-  // Simple components can also be created anonymously:
-  const $guests = guestsAtParty.map((guest) => {
+  const $guests = eventGuestRsvp.map((guest) => {
     const $guest = document.createElement("li");
     $guest.textContent = guest.name;
     return $guest;
   });
   $ul.replaceChildren(...$guests);
-
   return $ul;
 }
 
@@ -134,26 +204,28 @@ function render() {
   $app.innerHTML = `
     <h1>Party Planner</h1>
     <main>
-      <section>
+      <section class = "upcoming">
         <h2>Upcoming Parties</h2>
-        <PartyList></PartyList>
+        <EventList></EventList>
+        <h3>Create a new event</h3>
+        <NewEventForm></NewEventForm>
       </section>
-      <section id="selected">
+      <section class = "details" id="selected">
         <h2>Party Details</h2>
-        <SelectedParty></SelectedParty>
+        <EventDetails></EventDetails>
       </section>
     </main>
   `;
-
-  $app.querySelector("PartyList").replaceWith(PartyList());
-  $app.querySelector("SelectedParty").replaceWith(SelectedParty());
+  $app.querySelector("EventList").replaceWith(EventList());
+  $app.querySelector("NewEventForm").replaceWith(NewEventForm());
+  $app.querySelector("EventDetails").replaceWith(EventDetails());
 }
 
-async function init() {
-  await getParties();
-  await getRsvps();
+async function initialize() {
+  await getEvents();
   await getGuests();
+  await getRSVPs();
   render();
 }
 
-init();
+initialize();
